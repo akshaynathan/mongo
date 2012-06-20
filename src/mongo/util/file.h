@@ -23,9 +23,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/statvfs.h>
+#   if !defined(__ANDROID__)
+#   include <sys/statvfs.h>
+#   else
+#   include <sys/vfs.h>
+#   endif
 #endif
 #include "text.h"
+
+#define statvfs statfs
 
 namespace mongo {
 

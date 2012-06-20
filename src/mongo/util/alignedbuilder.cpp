@@ -101,7 +101,7 @@ namespace mongo {
         void *p = VirtualAlloc(0, sz, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
         _p._allocationAddress = p;
         _p._data = (char *) p;
-#elif defined(__linux__)
+#elif defined(__linux__) && !defined(__ANDROID__)
         // in theory #ifdef _POSIX_VERSION should work, but it doesn't on OS X 10.4, and needs to be testeed on solaris.
         // so for now, linux only for this.
         void *p = 0;

@@ -1,6 +1,6 @@
 # -*- mode: python -*-
 
-Import("env windows linux darwin solaris")
+Import("env windows linux darwin solaris android")
 
 def removeIfPresent(lst, item):
     try:
@@ -25,8 +25,14 @@ if linux or darwin:
 elif solaris:
     env.Append(CPPDEFINES=['SOLARIS', 'HAVE_VA_LIST_AS_ARRAY', 'SVR4', 'SYSV', 'HAVE_LOCALTIME_R'])
 
-env.Program('jskwgen', 'jskwgen.c')
-env.Program('jscpucfg', 'jscpucfg.c')
+if android:                                     # When cross-compiling for android, these 2 configuration files must be
+    host_env = Environment()                    # compiled on the host platform (because they need to be run)
+    host_env.Append(CPPDEFINES=['IS_LITTLE_ENDIAN', 'CROSS_COMPILE', '__ANDROID__'])
+    host_env.Program('jskwgen', 'jskwgen.c')
+    host_env.Program('jscpucfg', 'jscpucfg.c')
+else:
+    env.Program('jskwgen', 'jskwgen.c')
+    env.Program('jscpucfg', 'jscpucfg.c')
 
 env.Command('jsautokw.h', ['${PROGREFIX}jskwgen${PROGSUFFIX}'],
             '$SOURCE >$TARGET')

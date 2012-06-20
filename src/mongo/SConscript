@@ -11,7 +11,7 @@ Import("testEnv")
 Import("has_option")
 Import("usesm usev8")
 Import("installSetup")
-Import("darwin windows solaris linux nix")
+Import("darwin windows solaris linux nix android")
 
 env.SConscript(['platform/SConscript',
                 'unittest/SConscript'])
@@ -183,7 +183,7 @@ processInfoFiles = [ "util/processinfo.cpp" ]
 processInfoPlatformFile = env.File( "util/processinfo_${PYSYSPLATFORM}.cpp" )
 # NOTE( schwerin ): This is a very un-scons-y way to make this decision, and prevents one from using
 # code generation to produce util/processinfo_$PYSYSPLATFORM.cpp.
-if not os.path.exists( str( processInfoPlatformFile ) ):
+if not os.path.exists( str( processInfoPlatformFile ) ) or android:
     processInfoPlatformFile = env.File( "util/processinfo_none.cpp" )
 
 processInfoFiles.append( processInfoPlatformFile )

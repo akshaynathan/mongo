@@ -176,6 +176,7 @@ add_option( "no-glibc-check" , "don't check for new versions of glibc" , 0 , Fal
 add_option( "mm", "use main memory instead of memory mapped files" , 0 , True )
 add_option( "asio" , "Use Asynchronous IO (NOT READY YET)" , 0 , True )
 add_option( "ssl" , "Enable SSL" , 0 , True )
+add_option( "android", "Cross-compile for x86-android platform (--android PATH_TO_NDK_ROOT)", 1, True )  
 
 # library choices
 add_option( "usesm" , "use spider monkey for javascript" , 0 , True )
@@ -247,6 +248,7 @@ onlyServer = len( COMMAND_LINE_TARGETS ) == 0 or ( len( COMMAND_LINE_TARGETS ) =
 nix = False
 linux = False
 linux64  = False
+android = False
 darwin = False
 windows = False
 freebsd = False
@@ -320,6 +322,10 @@ if os.sys.platform == 'win32':
     env['OS_FAMILY'] = 'win'
 else:
     env['OS_FAMILY'] = 'posix'
+
+if has_option( "android" ):
+    android = True
+    env['PYSYSPLATFORM'] = 'linux2' # Closest estimate to the android linux kernel
 
 if has_option( "cxx" ):
     env["CC"] = get_option( "cxx" )
@@ -663,7 +669,6 @@ if nix:
     env.Append( CCFLAGS=["-fPIC",
                          "-fno-strict-aliasing",
                          "-ggdb",
-                         "-pthread",
                          "-Wall",
                          "-Wsign-compare",
                          "-Wno-unknown-pragmas",
@@ -676,8 +681,12 @@ if nix:
 
     env.Append( CPPDEFINES=["_FILE_OFFSET_BITS=64"] )
     env.Append( CXXFLAGS=["-Wnon-virtual-dtor", "-Woverloaded-virtual"] )
-    env.Append( LINKFLAGS=["-fPIC", "-pthread",  "-rdynamic"] )
+    env.Append( LINKFLAGS=["-fPIC",  "-rdynamic"] )
     env.Append( LIBS=[] )
+
+    if not android:                                # Android's Bionic C library provides a nonstandard implementation of pthread
+        env.Append( LINKFLAGS=["-pthread"] )
+        env.Append( CCFLAGS=["-pthread"] )
 
     #make scons colorgcc friendly
     for key in ('HOME', 'TERM'):
@@ -727,6 +736,20 @@ if nix:
     elif os.path.exists( env.File("$BUILD_DIR/mongo/pch.h$GCHSUFFIX").abspath ):
         print( "removing precompiled headers" )
         os.unlink( env.File("$BUILD_DIR/mongo/pch.h.$GCHSUFFIX").abspath ) # gcc uses the file if it exists
+
+if android:                 # Set all the cross-compilation tools
+    ndk_root = GetOption("android")
+    env['RANLIB'] = "%s/toolchains/x86-4.4.3/prebuilt/darwin-x86/bin/i686-android-linux-ranlib" % ndk_root
+    env['AR'] = "%s/toolchains/x86-4.4.3/prebuilt/darwin-x86/bin/i686-android-linux-ar" % ndk_root
+    env['AS'] = "%s/toolchains/x86-4.4.3/prebuilt/darwin-x86/bin/i686-android-linux-as" % ndk_root
+    env['LD'] = "%s/toolchains/x86-4.4.3/prebuilt/darwin-x86/bin/i686-android-linux-ld" % ndk_root
+    env['CXX'] = "%s/toolchains/x86-4.4.3/prebuilt/darwin-x86/bin/i686-android-linux-g++" % ndk_root
+    env['CC'] = "%s/toolchains/x86-4.4.3/prebuilt/darwin-x86/bin/i686-android-linux-gcc-4.4.3" % ndk_root
+    env.Prepend( CCFLAGS=['--sysroot', '"%s/platforms/android-14/arch-x86/"' % ndk_root, '-D_FILE_OFFSET_BITS=64'] )        # Set all library paths      
+    env.Prepend( LINKFLAGS=['--sysroot', '"%s/platforms/android-14/arch-x86/"' % ndk_root, '-D_FILE_OFFSET_BITS=64'] )
+    env.Append( LIBPATH=["%s/platforms/android-14/arch-x86/usr/lib/" % ndk_root,"%s/toolchains/x86-4.4.3/prebuilt/darwin-x86/lib/gcc/i686-android-linux/4.4.3/" % ndk_root,"%s/sources/cxx-stl/gnu-libstdc++/libs/x86/" % ndk_root, '$EXTRALIBPATH'] )
+    env.Append( CPPPATH=["%s/sources/cxx-stl/gnu-libstdc++/include/" % ndk_root, "%s/sources/cxx-stl/gnu-libstdc++/libs/x86/include/" % ndk_root] )
+    env.Append( LIBS=['c', 'm', 'gnustl_shared', 'supc++', 'gcc'] )
 
 if usev8:
     env.Prepend( EXTRACPPPATH=["#/../v8/include/"] )
@@ -793,7 +816,8 @@ def doConfigure(myenv):
     if solaris or conf.CheckDeclaration('clock_gettime', includes='#include <time.h>'):
         conf.CheckLib('rt')
 
-    if (conf.CheckCXXHeader( "execinfo.h" ) and
+    if (not android and                                        # Android does not have execinfo, but scons is unable to detect this when cross-compiling
+        conf.CheckCXXHeader( "execinfo.h" ) and
         conf.CheckDeclaration('backtrace', includes='#include <execinfo.h>') and
         conf.CheckDeclaration('backtrace_symbols', includes='#include <execinfo.h>')):
 
@@ -838,7 +862,7 @@ def doConfigure(myenv):
     return conf.Finish()
 
 env = doConfigure( env )
-
+print env.Dump()
 testEnv = env.Clone()
 testEnv.Append( CPPPATH=["../"] )
 
@@ -1068,7 +1092,7 @@ Export("testEnv")
 Export("has_option use_system_version_of_library")
 Export("installSetup")
 Export("usesm usev8")
-Export("darwin windows solaris linux nix")
+Export("darwin windows solaris linux nix android")
 
 env.SConscript( 'src/SConscript', variant_dir='$BUILD_DIR', duplicate=False )
 env.SConscript( 'src/SConscript.client', variant_dir='$BUILD_DIR/client_build', duplicate=False )

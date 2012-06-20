@@ -11,7 +11,9 @@
 
 #ifndef _WIN32
 # ifndef __sunos__
-#  include <ifaddrs.h>
+#  ifndef __ANDROID__
+#   include <ifaddrs.h>
+#  endif
 # endif
 # include <sys/resource.h>
 # include <sys/stat.h>
@@ -34,7 +36,7 @@
 
 namespace mongo {
 
-#if !defined(_WIN32) && !defined(__sunos__)
+#if !defined(_WIN32) && !defined(__sunos__) && !defined(__ANDROID__)
 
     vector<string> getMyAddrs() {
         vector<string> out;
@@ -182,7 +184,7 @@ namespace mongo {
                 return i->second;
         }
 
-#if !defined(_WIN32) && !defined(__sunos__)
+#if !defined(_WIN32) && !defined(__sunos__) && !defined(__ANDROID__)
         // on linux and os x we can do a quick check for an ip match
 
         const vector<string> myaddrs = getMyAddrs();

@@ -26,7 +26,7 @@
 #   include <sys/stat.h>
 #endif
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(__ANDROID__)
 #   include <sys/vfs.h>
 #endif
 
@@ -162,7 +162,7 @@ namespace mongo {
         }
 #endif
 
-#if defined(__linux__)
+#if defined(__linux__) && !defined(__ANDROID__)
         int ret = posix_fallocate(fd,0,size);
         if ( ret == 0 )
             return;

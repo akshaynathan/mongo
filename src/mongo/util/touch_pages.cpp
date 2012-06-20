@@ -69,7 +69,7 @@ namespace mongo {
         pm.finished();
     }
 
-#if defined(__linux__)    
+#if defined(__linux__) && !defined(__ANDROID__)    
     void touch_pages( HANDLE fd, int offset, size_t length, const Extent* ext ) {
         if ( -1 == readahead(fd, offset, length) ) {
             massert( 16237, str::stream() << "readahead failed on fd " << fd 

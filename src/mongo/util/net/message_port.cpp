@@ -33,7 +33,9 @@
 
 #ifndef _WIN32
 # ifndef __sunos__
-#  include <ifaddrs.h>
+#  ifndef __ANDROID__
+#   include <ifaddrs.h>
+#  endif
 # endif
 # include <sys/resource.h>
 # include <sys/stat.h>
