@@ -99,6 +99,11 @@ namespace mongo {
                 help << "flush all router config";
             }
             bool run(const string& , BSONObj& cmdObj, int, string& errmsg, BSONObjBuilder& result, bool) {
+                if ( !ClientBasic::getCurrent()->getAuthenticationInfo()->isAuthorized("admin") ) {
+                    errmsg = "unauthorized. Need admin authentication for flushRouterConfig. ";
+                    return false;
+                }
+
                 grid.flushConfig();
                 result.appendBool( "flushed" , true );
                 return true;
@@ -399,6 +404,12 @@ namespace mongo {
                         << "  { enablesharding : \"<dbname>\" }\n";
             }
             bool run(const string& , BSONObj& cmdObj, int, string& errmsg, BSONObjBuilder& result, bool) {
+                if ( !ClientBasic::getCurrent()->getAuthenticationInfo()->isAuthorized("admin") ) {
+                    errmsg = "unauthorized. Need admin authentication to enable sharding on a "
+                        "database";
+                    return false;
+                }
+
                 string dbname = cmdObj.firstElement().valuestrsafe();
                 if ( dbname.size() == 0 ) {
                     errmsg = "no db";
@@ -444,6 +455,11 @@ namespace mongo {
             }
 
             bool run(const string& , BSONObj& cmdObj, int, string& errmsg, BSONObjBuilder& result, bool) {
+                if ( !ClientBasic::getCurrent()->getAuthenticationInfo()->isAuthorized("admin") ) {
+                    errmsg = "unauthorized. Need admin authentication to shard a collection";
+                    return false;
+                }
+
                 const string ns = cmdObj.firstElement().valuestrsafe();
                 if ( ns.size() == 0 ) {
                     errmsg = "no ns";
@@ -688,6 +704,10 @@ namespace mongo {
             }
 
             bool run(const string& , BSONObj& cmdObj, int, string& errmsg, BSONObjBuilder& result, bool) {
+                if ( !ClientBasic::getCurrent()->getAuthenticationInfo()->isAuthorized("admin") ) {
+                    errmsg = "unauthorized. Need admin authentication to split a chunk ";
+                    return false;
+                }
 
                 if ( ! okForConfigChanges( errmsg ) )
                     return false;
@@ -766,6 +786,10 @@ namespace mongo {
                 help << "{ movechunk : 'test.foo' , find : { num : 1 } , to : 'localhost:30001' }";
             }
             bool run(const string& , BSONObj& cmdObj, int, string& errmsg, BSONObjBuilder& result, bool) {
+                if ( !ClientBasic::getCurrent()->getAuthenticationInfo()->isAuthorized("admin") ) {
+                    errmsg = "unauthorized. Need admin authentication to move a chunk ";
+                    return false;
+                }
 
                 if ( ! okForConfigChanges( errmsg ) )
                     return false;
@@ -844,8 +868,8 @@ namespace mongo {
             }
             bool run(const string& , BSONObj& cmdObj, int, string& errmsg, BSONObjBuilder& result, bool) {
                 scoped_ptr<ScopedDbConnection> conn(
-                        ScopedDbConnection::getScopedDbConnection( configServer.getPrimary()
-                                                                   .getConnString() ) );
+                        ScopedDbConnection::getInternalScopedDbConnection( configServer.getPrimary()
+                                                                           .getConnString() ) );
 
                 vector<BSONObj> all;
                 auto_ptr<DBClientCursor> cursor = conn->get()->query( "config.shards" , BSONObj() );
@@ -870,6 +894,12 @@ namespace mongo {
             }
             bool run(const string& , BSONObj& cmdObj, int, string& errmsg, BSONObjBuilder& result, bool) {
                 errmsg.clear();
+
+                if ( !ClientBasic::getCurrent()->getAuthenticationInfo()->isAuthorized("admin") ) {
+                    errmsg = "unauthorized. Need admin authentication to add a shard ";
+                    log() << "addshard request " << cmdObj << " failed:" << errmsg << endl;
+                    return false;
+                }
 
                 // get replica set component hosts
                 ConnectionString servers = ConnectionString::parse( cmdObj.firstElement().valuestrsafe() , errmsg );
@@ -930,6 +960,11 @@ namespace mongo {
                 help << "remove a shard to the system.";
             }
             bool run(const string& , BSONObj& cmdObj, int, string& errmsg, BSONObjBuilder& result, bool) {
+                if ( !ClientBasic::getCurrent()->getAuthenticationInfo()->isAuthorized("admin") ) {
+                    errmsg = "unauthorized. Need admin authentication to remove a shard ";
+                    return false;
+                }
+
                 string target = cmdObj.firstElement().valuestrsafe();
                 Shard s = Shard::make( target );
                 if ( ! grid.knowAboutShard( s.getConnString() ) ) {
@@ -938,8 +973,8 @@ namespace mongo {
                 }
 
                 scoped_ptr<ScopedDbConnection> connPtr(
-                        ScopedDbConnection::getScopedDbConnection( configServer.getPrimary()
-                                                                   .getConnString() ) );
+                        ScopedDbConnection::getInternalScopedDbConnection( configServer.getPrimary()
+                                                                           .getConnString() ) );
                 ScopedDbConnection& conn = *connPtr;
 
                 if (conn->count("config.shards", BSON("_id" << NE << s.getName() << ShardFields::draining(true)))){
@@ -1261,8 +1296,8 @@ namespace mongo {
             
             if ( sizes.find( "config" ) == sizes.end() ){
                 scoped_ptr<ScopedDbConnection> conn(
-                        ScopedDbConnection::getScopedDbConnection( configServer.getPrimary()
-                                                                   .getConnString() ) );
+                        ScopedDbConnection::getInternalScopedDbConnection( configServer.getPrimary()
+                                                                           .getConnString() ) );
                 BSONObj x;
                 if ( conn->get()->simpleCommand( "config" , &x , "dbstats" ) ){
                     BSONObjBuilder b;
@@ -1336,6 +1371,11 @@ namespace mongo {
     }
 
     bool CmdShutdown::run(const string& dbname, BSONObj& cmdObj, int, string& errmsg, BSONObjBuilder& result, bool fromRepl) {
+        if ( !ClientBasic::getCurrent()->getAuthenticationInfo()->isAuthorized("admin") ) {
+            errmsg = "unauthorized. Need admin authentication to run shutdown";
+            return false;
+        }
+
         return shutdownHelper();
     }
 

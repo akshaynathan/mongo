@@ -85,12 +85,20 @@ namespace replset {
         return ok;
     }
 
+    void initializePrefetchThread() {
+        if (!ClientBasic::getCurrent()) {
+            Client::initThread("repl prefetch worker");
+            replLocalAuth();
+        }
+    }
+
     void initializeWriterThread() {
         // Only do this once per thread
         if (!ClientBasic::getCurrent()) {
             Client::initThread("repl writer worker");
             // allow us to get through the magic barrier
             Lock::ParallelBatchWriterMode::iAmABatchParticipant();
+            replLocalAuth();
         }
     }
 
@@ -140,13 +148,17 @@ namespace replset {
 
     // The pool threads call this to prefetch each op
     void SyncTail::prefetchOp(const BSONObj& op) {
-        if (!ClientBasic::getCurrent()) {
-            Client::initThread("repl prefetch worker");
-        }
+        initializePrefetchThread();
+
         const char *ns = op.getStringField("ns");
         if (ns && (ns[0] != '\0')) {
-            Client::ReadContext ctx(ns);
-            prefetchPagesForReplicatedOp(op);
+            try {
+                Client::ReadContext ctx(ns);
+                prefetchPagesForReplicatedOp(op);
+            }
+            catch (const DBException& e) {
+                LOG(2) << "ignoring exception in prefetchOp(): " << e.what() << endl;
+            }
         }
     }
 
@@ -287,9 +299,10 @@ namespace replset {
             verify( !Lock::isLocked() );
 
             // always fetch a few ops first
-            tryPopAndWaitForMore(&ops);
-
-            while (ops.size() < replBatchSize) {
+            
+            // tryPopAndWaitForMore returns true when we need to end a batch early
+            while (!tryPopAndWaitForMore(&ops) && 
+                   (ops.size() < replBatchSize)) {
 
                 if (theReplSet->isPrimary()) {
                     return;
@@ -317,10 +330,6 @@ namespace replset {
                         sleepsecs(1);
                         return;
                     }
-                }
-
-                if (tryPopAndWaitForMore(&ops)) {
-                    break;
                 }
             }
             const BSONObj& lastOp = ops.back();
