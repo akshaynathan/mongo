@@ -107,7 +107,7 @@ namespace mongo {
         BSONObj JSRand( const BSONObj &a, void* data ) {
             uassert( 12519, "rand accepts no arguments", a.nFields() == 0 );
             unsigned r;
-#if !defined(_WIN32)
+#if !defined(_WIN32) && !defined(__ANDROID__)
             r = rand_r( &_randomSeed.getRef() );
 #else
             r = rand();

@@ -402,7 +402,7 @@ namespace mongo {
 
                     // Async signal unsafe code reporting a terminal error condition.
                     cout << "Unable to dup2 child output: " << errnoWithDescription() << endl;
-                    ::_Exit(-1); //do not pass go, do not call atexit handlers
+                    ::_exit(-1); //do not pass go, do not call atexit handlers
                 }
 
                 // Heap-check for mongos only. 'argv[0]' must be in the path format.
@@ -423,7 +423,7 @@ namespace mongo {
 
                 // Async signal unsafe code reporting a terminal error condition.
                 cout << "Unable to start program " << argv[0] << ' ' << errnoWithDescription() << endl;
-                ::_Exit(-1);
+                ::_exit(-1);
             }
 
 #endif

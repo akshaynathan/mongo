@@ -48,7 +48,7 @@ namespace ShardingTests {
     static int rand( int max = -1 ){
         static unsigned seed = 1337;
 
-#if !defined(_WIN32)
+#if !defined(_WIN32) && !defined(__ANDROID__)
         int r = rand_r( &seed ) ;
 #else
         int r = ::rand(); // seed not used in this case

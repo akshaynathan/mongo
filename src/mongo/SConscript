@@ -442,7 +442,7 @@ env.Install( '#/', testEnv.Program( "perftest", [ "dbtests/perf/perftest.cpp" ],
 
 # --- sniffer ---
 mongosniff_built = False
-if darwin or env["_HAVEPCAP"]:
+if (darwin and not android) or env["_HAVEPCAP"]:
     mongosniff_built = True
     sniffEnv = env.Clone()
     sniffEnv.Append( CPPDEFINES="MONGO_EXPOSE_MACROS" )
