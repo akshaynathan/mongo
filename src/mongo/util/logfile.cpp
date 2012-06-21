@@ -186,9 +186,13 @@ namespace mongo {
 
     void LogFile::truncate() {
         verify(_fd >= 0);
-
-        BOOST_STATIC_ASSERT(sizeof(off64_t) == 8); // we don't want overflow here
-        const off64_t pos = lseek(_fd, 0, SEEK_CUR); // doesn't actually seek
+#ifdef __ANDROID__
+        BOOST_STATIC_ASSERT(sizeof(off64_t) == 8); // off_t is only 32 bits on android, without this ifdef, server fails on start
+        const off64_t pos = lseek(_fd, 0, SEEK_CUR);
+#else
+        BOOST_STATIC_ASSERT(sizeof(off_t) == 8); 
+        const off_t pos = lseek(_fd, 0, SEEK_CUR); // doesn't actually seek
+#endif        
         if (ftruncate(_fd, pos) != 0){
             msgasserted(15873, "Couldn't truncate file: " + errnoWithDescription());
         }
