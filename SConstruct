@@ -862,7 +862,6 @@ def doConfigure(myenv):
     return conf.Finish()
 
 env = doConfigure( env )
-print env.Dump()
 testEnv = env.Clone()
 testEnv.Append( CPPPATH=["../"] )
 
