@@ -858,7 +858,7 @@ int _main( int argc, char* argv[] ) {
             }
 
             string code = linePtr;
-            if ( ! linePtr || 
+            if ( !linePtr || 
                 code == "exit" || code == "exit;"  || 
                 code == "quit" || code == "quit;") {
                 if ( ! mongo::cmdLine.quiet )
