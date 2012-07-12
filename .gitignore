@@ -9,6 +9,7 @@
 
 *~
 *.swp
+*.swo
 *.o
 *.os
 *.obj
