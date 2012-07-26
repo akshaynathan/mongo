@@ -29,6 +29,10 @@
 #include "mongo/db/key.h"
 #include "mongo/db/namespace.h"
 
+
+#define MAX_BTREE_DOCUMENT_SIZE 1024
+
+
 namespace mongo {
 
     class IndexInterface {

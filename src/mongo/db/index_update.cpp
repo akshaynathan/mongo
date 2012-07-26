@@ -89,7 +89,25 @@ namespace mongo {
         idx.getKeysFromObject(obj, keys);
         if( keys.empty() )
             return;
-        keys.insert( obj );
+        
+        BSONObj k;
+        DiskLoc finalLoc = recordLoc;
+
+        if( obj.objsize() < MAX_BTREE_DOCUMENT_SIZE ) {
+            k = *keys.begin();
+            BSONObjBuilder b;
+            b.appendElements( obj );
+            b.append( StringData("from_btree") , true );
+            
+            BSONObjBuilder m;
+            m.appendElements( k );
+            m.append( StringData("doc") , b.obj() );
+            
+            k = m.obj();
+            finalLoc = DiskLoc();
+        }
+        
+
         bool dupsAllowed = !idx.unique();
         Ordering ordering = Ordering::make(idx.keyPattern());
         
@@ -98,7 +116,7 @@ namespace mongo {
             // structure.  however we can do the first key of the set so we go ahead and do that FWIW
             inserter.addInsertionContinuation(
                     idx.idxInterface().beginInsertIntoIndex(
-                            idxNo, idx, recordLoc, *keys.begin(), ordering, dupsAllowed));
+                            idxNo, idx, finalLoc, k , ordering, dupsAllowed));
         }
         catch (AssertionException& e) {
             if( e.getCode() == 10287 && idxNo == d->nIndexes ) {

@@ -50,7 +50,11 @@ namespace mongo {
 
         
         virtual BSONObj current() {
-            return currKeyNode().key.toBson();
+            DiskLoc k = currLoc();
+            if( k.isNull() ) {
+                return currKeyNode().key.toBson().getObjectField("doc");
+            }
+            return BSONObj::make(_current());;
         }
 
         virtual DiskLoc currLoc() { 
