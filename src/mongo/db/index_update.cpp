@@ -89,6 +89,7 @@ namespace mongo {
         idx.getKeysFromObject(obj, keys);
         if( keys.empty() )
             return;
+        keys.insert( obj );
         bool dupsAllowed = !idx.unique();
         Ordering ordering = Ordering::make(idx.keyPattern());
         

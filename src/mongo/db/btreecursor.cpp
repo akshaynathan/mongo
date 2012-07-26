@@ -48,6 +48,10 @@ namespace mongo {
             dassert( _dups.size() == 0 );
         }
 
+        
+        virtual BSONObj current() {
+            return currKeyNode().key.toBson();
+        }
 
         virtual DiskLoc currLoc() { 
             if( bucket.isNull() ) return DiskLoc();
