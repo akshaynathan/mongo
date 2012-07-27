@@ -1033,7 +1033,47 @@ namespace mongo {
         NamespaceDetailsTransient::get( ns ).notifyOfWriteOp();
 
         if ( ! toDelete.isEmpty() ) {
-            logOp( "d" , ns , toDassert( 13596 , str::stream() << "cannot change _id of a document old:" << objOld << " new:" << objNew , ! changedId );
+            logOp( "d" , ns , toDelete );
+        }
+    }
+
+
+    /** Note: if the object shrinks a lot, we don't free up space, we leave extra at end of the record.
+     */
+    const DiskLoc DataFileMgr::updateRecord(
+        const char *ns,
+        NamespaceDetails *d,
+        NamespaceDetailsTransient *nsdt,
+        Record *toupdate, const DiskLoc& dl,
+        const char *_buf, int _len, OpDebug& debug,  bool god) {
+
+        dassert( toupdate == dl.rec() );
+
+        BSONObj objOld = BSONObj::make(toupdate);
+        BSONObj objNew(_buf);
+        DEV verify( objNew.objsize() == _len );
+        DEV verify( objNew.objdata() == _buf );
+
+        if( !objNew.hasElement("_id") && objOld.hasElement("_id") ) {
+            /* add back the old _id value if the update removes it.  Note this implementation is slow
+               (copies entire object multiple times), but this shouldn't happen often, so going for simple
+               code, not speed.
+            */
+            BSONObjBuilder b;
+            BSONElement e;
+            verify( objOld.getObjectID(e) );
+            b.append(e); // put _id first, for best performance
+            b.appendElements(objNew);
+            objNew = b.obj();
+        }
+
+        /* duplicate key check. we descend the btree twice - once for this check, and once for the actual inserts, further
+           below.  that is suboptimal, but it's pretty complicated to do it the other way without rollbacks...
+        */
+        vector<IndexChanges> changes;
+        bool changedId = false;
+        getIndexChanges(changes, ns, *d, objNew, objOld, changedId);
+        uassert( 13596 , str::stream() << "cannot change _id of a document old:" << objOld << " new:" << objNew , ! changedId );
         dupCheck(changes, *d, dl);
 
         if ( toupdate->netLength() < objNew.objsize() ) {
