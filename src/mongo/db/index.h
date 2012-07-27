@@ -31,7 +31,7 @@
 
 
 #define MAX_BTREE_DOCUMENT_SIZE 1024
-
+#define CLUSTERED true
 
 namespace mongo {
 

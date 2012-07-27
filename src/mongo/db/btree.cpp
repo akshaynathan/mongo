@@ -640,11 +640,7 @@ namespace mongo {
     int BtreeBucket<V>::customBSONCmp( const BSONObj &l, const BSONObj &rBegin, int rBeginLen, bool rSup, const vector< const BSONElement * > &rEnd, const vector< bool > &rEndInclusive, const Ordering &o, int direction ) {
         BSONObjIterator ll( l );
         BSONObjIterator rr( rBegin );
-        log() << l.toString() << endl
-              << rBegin.toString() << endl;
-        for(size_t i = 0; i < rEnd.size(); ++i) {
-            log() << i << (*(rEnd[i])).toString() << endl;
-        }
+        
         vector< const BSONElement * >::const_iterator rr2 = rEnd.begin();
         vector< bool >::const_iterator inc = rEndInclusive.begin();
         unsigned mask = 1;

@@ -35,7 +35,7 @@ namespace mongo {
     // add index keys for a newly inserted record 
     // done in two steps/phases to allow potential deferal of write lock portion in the future
     void indexRecordUsingTwoSteps(const char *ns, NamespaceDetails *d, BSONObj obj,
-                                         DiskLoc loc, bool shouldBeUnlocked);
+                                         DiskLoc loc, bool shouldBeUnlocked, bool putInBtree);
 
     // Given an object, populate "inserter" with information necessary to update indexes.
     void fetchIndexInserters(BSONObjSet & /*out*/keys,
@@ -43,7 +43,8 @@ namespace mongo {
                              NamespaceDetails *d,
                              int idxNo,
                              const BSONObj& obj,
-                             DiskLoc recordLoc);
+                             DiskLoc recordLoc,
+                             bool clustered);
 
     bool dropIndexes( NamespaceDetails *d, const char *ns, const char *name, string &errmsg, BSONObjBuilder &anObjBuilder, bool maydeleteIdIndex );
 

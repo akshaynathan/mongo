@@ -461,6 +461,7 @@ namespace mongo {
 
             BSONElement l = i.next();
             BSONElement r = j.next();
+             
             if ( l.eoo() )
                 return r.eoo() ? 0 : -1;
             if ( r.eoo() )

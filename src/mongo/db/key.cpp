@@ -522,6 +522,9 @@ namespace mongo {
     }
 
     int KeyV1::woCompare(const KeyV1& right, const Ordering &order) const {
+        
+        log(1) << (*this).toBson().toString() << "     " << right.toBson().toString() << endl;
+        
         const unsigned char *l = _keyData;
         const unsigned char *r = right._keyData;
 

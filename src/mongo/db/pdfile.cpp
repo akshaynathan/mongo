@@ -1480,7 +1480,7 @@ namespace mongo {
                 verify( obuf );
                 BSONObj obj((const char *) obuf);
                 try {
-                    indexRecordUsingTwoSteps(ns, d, obj, loc, true);
+                    indexRecordUsingTwoSteps(ns, d, obj, loc, true, false);
                 }
                 catch( AssertionException& ) {
                     // should be a dup key error on _id index
@@ -1534,7 +1534,7 @@ namespace mongo {
                 // not sure which of these is better -- either can be used.  oldIndexRecord may be faster, 
                 // but twosteps handles dup key errors more efficiently.
                 //oldIndexRecord(d, obj, loc);
-                indexRecordUsingTwoSteps(ns, d, obj, loc, false);
+                indexRecordUsingTwoSteps(ns, d, obj, loc, false, false);
 
             }
             catch( AssertionException& e ) {

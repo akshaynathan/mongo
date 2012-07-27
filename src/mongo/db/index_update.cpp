@@ -84,7 +84,8 @@ namespace mongo {
                              NamespaceDetails *d,
                              int idxNo,
                              const BSONObj& obj,
-                             DiskLoc recordLoc) {
+                             DiskLoc recordLoc,
+                             bool clustered) {
         IndexDetails &idx = d->idx(idxNo);
         idx.getKeysFromObject(obj, keys);
         if( keys.empty() )
@@ -93,19 +94,21 @@ namespace mongo {
         BSONObj k;
         DiskLoc finalLoc = recordLoc;
 
-        if( obj.objsize() < MAX_BTREE_DOCUMENT_SIZE ) {
+        if( clustered || obj.objsize() < 512 ) {
             k = *keys.begin();
             BSONObjBuilder b;
             b.appendElements( obj );
-            b.append( StringData("from_btree") , true );
+            b.append( StringData("__from_btree__") , true );
             
             BSONObjBuilder m;
             m.appendElements( k );
-            m.append( StringData("doc") , b.obj() );
+            m.append( StringData("__doc__") , b.obj() );
             
             k = m.obj();
             finalLoc = DiskLoc();
         }
+
+        massert( 16363, "final key object too large", k.objsize() < MAX_BTREE_DOCUMENT_SIZE );
         
 
         bool dupsAllowed = !idx.unique();
@@ -132,7 +135,7 @@ namespace mongo {
         done in two steps/phases to allow potential deferal of write lock portion in the future
     */
     void indexRecordUsingTwoSteps(const char *ns, NamespaceDetails *d, BSONObj obj,
-                                         DiskLoc loc, bool shouldBeUnlocked) {
+                                         DiskLoc loc, bool shouldBeUnlocked, bool putInBtree) {
         vector<int> multi;
         vector<BSONObjSet> multiKeys;
 
@@ -144,7 +147,7 @@ namespace mongo {
             BSONObjSet keys;
             for ( int i = 0; i < n; i++ ) {
                 // this call throws on unique constraint violation.  we haven't done any writes yet so that is fine.
-                fetchIndexInserters(/*out*/keys, inserter, d, i, obj, loc);
+                fetchIndexInserters(/*out*/keys, inserter, d, i, obj, loc, putInBtree);
                 if( keys.size() > 1 ) {
                     multi.push_back(i);
                     multiKeys.push_back(BSONObjSet());
