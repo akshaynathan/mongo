@@ -105,7 +105,10 @@ namespace mongo {
                 continue;
 
             // SERVER-5198 Advance past the document to be modified, but see SERVER-5725.
-            while( cc->ok() && rloc == cc->currLoc() ) {
+    
+            // On a clustered index, we cant skip past all null recordLocations, because the documents
+            // might not be the same
+            while( cc->ok() && rloc == cc->currLoc() && !rloc.isNull() ) {
                 cc->advance();
             }
             
