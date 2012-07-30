@@ -1006,6 +1006,12 @@ namespace mongo {
         }
     }
 
+
+    void DataFileMgr::deleteEmbeddedDocument( const char *ns, BSONObj obj, bool nowarn ) {
+        NamespaceDetails* d = nsdetails(ns);
+        unindexObject( d, obj, nowarn );
+    }
+
     void DataFileMgr::deleteRecord(const char *ns, Record *todelete, const DiskLoc& dl, bool cappedOK, bool noWarn, bool doLog ) {
         dassert( todelete == dl.rec() );
 
@@ -1443,6 +1449,23 @@ namespace mongo {
             }
 
             BSONElementManipulator::lookForTimestamps( io );
+        }
+
+        if( CLUSTERED && len <= 512 && !addIndex ) {
+            BSONObj toAdd((const char *) obuf); 
+            if( addID ) {
+                BSONObjBuilder k;
+                k.appendElements( toAdd );
+                k.append( StringData("_id"), idToInsert_.oid );
+                toAdd = k.obj();
+            }
+            try {
+                indexRecordUsingTwoSteps(ns, d, toAdd, DiskLoc(), true, true);
+            }
+            catch( AssertionException& ) {
+                throw;
+            }
+            return DiskLoc();
         }
 
         int lenWHdr = d->getRecordAllocationSize( len + Record::HeaderSize );

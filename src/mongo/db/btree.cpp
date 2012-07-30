@@ -1231,6 +1231,7 @@ namespace mongo {
     /** remove a key from the index */
     template< class V >
     bool BtreeBucket<V>::unindex(const DiskLoc thisLoc, IndexDetails& id, const BSONObj& key, const DiskLoc recordLoc ) const {
+        log() << key.toString();
         int pos;
         bool found;
         const Ordering ord = Ordering::make(id.keyPattern());

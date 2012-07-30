@@ -95,6 +95,7 @@ namespace mongo {
 
             DiskLoc rloc = cc->currLoc();
             BSONObj key = cc->currKey();
+            BSONObj doc = cc->current();
 
             bool match = creal->currentMatches();
 
@@ -116,7 +117,7 @@ namespace mongo {
                 cc->c()->prepareToTouchEarlierIterate();
             }
 
-            if ( logop ) {
+            if ( logop && !rloc.isNull() ) {
                 BSONElement e;
                 if( BSONObj::make( rloc.rec() ).getObjectID( e ) ) {
                     BSONObjBuilder b;
@@ -131,8 +132,13 @@ namespace mongo {
 
             if ( rs )
                 rs->goingToDelete( rloc.obj() /*cc->c->current()*/ );
-
-            theDataFileMgr.deleteRecord(ns, rloc.rec(), rloc);
+            
+            if( !rloc.isNull() )
+                theDataFileMgr.deleteRecord(ns, rloc.rec(), rloc);
+            else
+                theDataFileMgr.deleteEmbeddedDocument(ns, doc, false);
+            
+            
             nDeleted++;
             if ( foundAllResults ) {
                 break;

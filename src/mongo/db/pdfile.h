@@ -159,6 +159,8 @@ namespace mongo {
         /* does not clean up indexes, etc. : just deletes the record in the pdfile. use deleteRecord() to unindex */
         void _deleteRecord(NamespaceDetails *d, const char *ns, Record *todelete, const DiskLoc& dl);
 
+        void deleteEmbeddedDocument(const char *ns, BSONObj obj, bool noWarn = false); 
+
     private:
         vector<MongoDataFile *> files;
     };

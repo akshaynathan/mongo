@@ -24,6 +24,11 @@ namespace mongo {
     class NamespaceDetails;
     class Record;
 
+    // unindexes a specific object, this is used when we dont have a record (when the object is embedded in the btree)
+    void unindexObject(NamespaceDetails *d,
+                       BSONObj obj,
+                       bool nowarn=false); 
+
     // unindex all keys in index for this record. 
     void unindexRecord(NamespaceDetails *d, Record *todelete, const DiskLoc& dl, bool noWarn = false);
 

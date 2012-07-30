@@ -59,6 +59,21 @@ namespace mongo {
             }
         }
     }
+    
+
+    void unindexObject(NamespaceDetails *d,
+                       BSONObj obj,
+                       bool nowarn) {
+        BSONObj o = obj.getOwned();
+
+        int n = d->nIndexes;
+        for ( int i = 0; i < n; i++ )
+            _unindexRecord(d->idx(i), o , DiskLoc(), !nowarn);
+        if( d->indexBuildInProgress ) { // background index
+            // always pass nowarn here, as this one may be missing for valid reasons as we are concurrently building it
+            _unindexRecord(d->idx(n), o , DiskLoc(), false);
+        }
+    }
 
 //zzz
     /* unindex all keys in all indexes for this record. */
@@ -94,7 +109,7 @@ namespace mongo {
         BSONObj k;
         DiskLoc finalLoc = recordLoc;
 
-        if( clustered || obj.objsize() < 512 ) {
+        if( clustered && obj.objsize() < 512 ) {
             k = *keys.begin();
             BSONObjBuilder b;
             b.appendElements( obj );
@@ -107,6 +122,8 @@ namespace mongo {
             k = m.obj();
             finalLoc = DiskLoc();
         }
+        
+        log() << k.toString() << endl; 
 
         massert( 16363, "final key object too large", k.objsize() < MAX_BTREE_DOCUMENT_SIZE );
         
