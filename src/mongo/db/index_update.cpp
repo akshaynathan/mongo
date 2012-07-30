@@ -60,7 +60,7 @@ namespace mongo {
         }
     }
     
-
+    // Unindexes an object that doesnt belong to a record (from the btree)
     void unindexObject(NamespaceDetails *d,
                        BSONObj obj,
                        bool nowarn) {
@@ -123,8 +123,6 @@ namespace mongo {
             finalLoc = DiskLoc();
         }
         
-        log() << k.toString() << endl; 
-
         massert( 16363, "final key object too large", k.objsize() < MAX_BTREE_DOCUMENT_SIZE );
         
 
