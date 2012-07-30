@@ -447,11 +447,14 @@ namespace mongo {
         return false;
     }
 
-    int BSONObj::woCompare(const BSONObj& r, const Ordering &o, bool considerFieldName) const {
+    int BSONObj::woCompare(const BSONObj& r, const Ordering &o, bool considerFieldName, bool ignoreEmbedded ) const {
+        
+        
         if ( isEmpty() )
             return r.isEmpty() ? 0 : -1;
         if ( r.isEmpty() )
             return 1;
+        
 
         BSONObjIterator i(*this);
         BSONObjIterator j(r);
@@ -461,12 +464,13 @@ namespace mongo {
 
             BSONElement l = i.next();
             BSONElement r = j.next();
-            
-            if ( !strcmp(l.fieldName(), "__doc__" ) ) 
-                l = i.next();
-
-            if ( !strcmp(r.fieldName(), "__doc__" ) )
-                r = j.next();
+           
+            if ( ignoreEmbedded ) {
+                if ( !strcmp(l.fieldName(), "__doc__" ) ) 
+                    l = i.next();
+                if ( !strcmp(r.fieldName(), "__doc__" ) )
+                    r = j.next();
+            }
 
             if ( l.eoo() )
                 return r.eoo() ? 0 : -1;

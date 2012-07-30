@@ -175,8 +175,9 @@ namespace mongo {
        - dates are unsigned 
        - strings no nulls
     */
-    int KeyBson::woCompare(const KeyBson& r, const Ordering &o) const { 
-        return oldCompare(_o, r._o, o); 
+    int KeyBson::woCompare(const KeyBson& r, const Ordering &o, bool ignoreEmbedded ) const { 
+        //return oldCompare(_o, r._o, o); 
+        return toBson().woCompare(r.toBson(), o, false, ignoreEmbedded);
     }
 
     // woEqual could be made faster than woCompare but this is for backward compatibility so not worth a big effort
@@ -515,20 +516,20 @@ namespace mongo {
     }
 
     // at least one of this and right are traditional BSON format
-    int NOINLINE_DECL KeyV1::compareHybrid(const KeyV1& right, const Ordering& order) const { 
+    int NOINLINE_DECL KeyV1::compareHybrid(const KeyV1& right, const Ordering& order, bool ignoreEmbedded) const { 
         BSONObj L = toBson();
         BSONObj R = right.toBson();
-        return L.woCompare(R, order, /*considerfieldname*/false);
+        return L.woCompare(R, order, /*considerfieldname*/false, ignoreEmbedded);
     }
 
-    int KeyV1::woCompare(const KeyV1& right, const Ordering &order) const {
+    int KeyV1::woCompare(const KeyV1& right, const Ordering &order, bool ignoreEmbedded) const {
         
         
         const unsigned char *l = _keyData;
         const unsigned char *r = right._keyData;
 
         if( (*l|*r) == IsBSON ) // only can do this if cNOTUSED maintained
-            return compareHybrid(right, order);
+            return compareHybrid(right, order, ignoreEmbedded);
 
         unsigned mask = 1;
         while( 1 ) { 

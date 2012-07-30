@@ -639,7 +639,8 @@ namespace mongo {
     template< class V >
     int BtreeBucket<V>::customBSONCmp( const BSONObj &l, const BSONObj &rBegin, int rBeginLen, bool rSup, const vector< const BSONElement * > &rEnd, const vector< bool > &rEndInclusive, const Ordering &o, int direction ) {
         BSONObjIterator ll( l );
-        BSONObjIterator rr( rBegin );    
+        BSONObjIterator rr( rBegin );
+        
         vector< const BSONElement * >::const_iterator rr2 = rEnd.begin();
         vector< bool >::const_iterator inc = rEndInclusive.begin();
         unsigned mask = 1;
@@ -658,9 +659,6 @@ namespace mongo {
         if ( rSup ) {
             return -direction;
         }
-        // for( ; ll.more(); mask <<= 1 } {
-        // We have to check the right object runs off the end (we could be comparing between objects
-        // where one has the __doc__ field and the other doesnt)
         for( ; ll.more() && rr2 != rEnd.end() ; mask <<= 1 ) {
             BSONElement lll = ll.next();
             BSONElement rrr = **rr2;
@@ -763,7 +761,7 @@ namespace mongo {
         }
         while ( l <= h ) {
             KeyNode M = this->keyNode(m);
-            int x = key.woCompare(M.key, order);
+            int x = key.woCompare(M.key, order, true);
             if ( x == 0 ) {
                 if( assertIfDup ) {
                     if( k(m).isUnused() ) {
@@ -1233,6 +1231,7 @@ namespace mongo {
     /** remove a key from the index */
     template< class V >
     bool BtreeBucket<V>::unindex(const DiskLoc thisLoc, IndexDetails& id, const BSONObj& key, const DiskLoc recordLoc ) const {
+        
         int pos;
         bool found;
         const Ordering ord = Ordering::make(id.keyPattern());
