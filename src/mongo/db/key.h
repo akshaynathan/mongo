@@ -33,7 +33,7 @@ namespace mongo {
         KeyBson() { }
         explicit KeyBson(const char *keyData) : _o(keyData) { }
         explicit KeyBson(const BSONObj& obj) : _o(obj) { }
-        int woCompare(const KeyBson& r, const Ordering &o, bool ignoreEmbedded=false ) const;
+        int woCompare(const KeyBson& r, const Ordering &o, bool ignoreEmbedded=true ) const;
         BSONObj toBson() const { return _o; }
         string toString() const { return _o.toString(); }
         int dataSize() const { return _o.objsize(); }
@@ -71,7 +71,7 @@ namespace mongo {
         */
         explicit KeyV1(const char *keyData) : _keyData((unsigned char *) keyData) { }
 
-        int woCompare(const KeyV1& r, const Ordering &o, bool ignoreEmbedded=false ) const;
+        int woCompare(const KeyV1& r, const Ordering &o, bool ignoreEmbedded=true ) const;
         bool woEqual(const KeyV1& r) const;
         BSONObj toBson() const;
         string toString() const { return toBson().toString(); }
@@ -95,7 +95,7 @@ namespace mongo {
             return BSONObj((const char *) _keyData+1);
         }
     private:
-        int compareHybrid(const KeyV1& right, const Ordering& order, bool ignoreEmbedded=false ) const;
+        int compareHybrid(const KeyV1& right, const Ordering& order, bool ignoreEmbedded=true ) const;
     };
 
     class KeyV1Owned : public KeyV1 { 

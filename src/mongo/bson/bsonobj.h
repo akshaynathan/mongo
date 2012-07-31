@@ -301,7 +301,7 @@ namespace mongo {
            @return  <0 if l<r. 0 if l==r. >0 if l>r
         */
         int woCompare(const BSONObj& r, const Ordering &o,
-                      bool considerFieldName=true, bool ignoreEmbedded=false) const;
+                      bool considerFieldName=true, bool ignoreEmbedded=true) const;
 
         /**wo='well ordered'.  fields must be in same order in each object.
            Ordering is with respect to the signs of the elements

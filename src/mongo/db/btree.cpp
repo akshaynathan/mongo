@@ -761,7 +761,7 @@ namespace mongo {
         }
         while ( l <= h ) {
             KeyNode M = this->keyNode(m);
-            int x = key.woCompare(M.key, order, true);
+            int x = key.woCompare(M.key, order, false);
             if ( x == 0 ) {
                 if( assertIfDup ) {
                     if( k(m).isUnused() ) {

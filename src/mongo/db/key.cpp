@@ -177,6 +177,8 @@ namespace mongo {
     */
     int KeyBson::woCompare(const KeyBson& r, const Ordering &o, bool ignoreEmbedded ) const { 
         //return oldCompare(_o, r._o, o); 
+        log(1) << "comparing" << toBson().toString() << " to " << r.toBson().toString() << endl;
+        log(1) << ignoreEmbedded << endl;
         return toBson().woCompare(r.toBson(), o, false, ignoreEmbedded);
     }
 
