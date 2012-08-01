@@ -177,9 +177,7 @@ namespace mongo {
     */
     int KeyBson::woCompare(const KeyBson& r, const Ordering &o, bool ignoreEmbedded ) const { 
         //return oldCompare(_o, r._o, o); 
-        log(1) << "comparing" << toBson().toString() << " to " << r.toBson().toString() << endl;
-        log(1) << ignoreEmbedded << endl;
-        return toBson().woCompare(r.toBson(), o, false, ignoreEmbedded);
+        return _o.woCompare(r._o, o, false, ignoreEmbedded);
     }
 
     // woEqual could be made faster than woCompare but this is for backward compatibility so not worth a big effort

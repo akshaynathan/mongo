@@ -142,7 +142,7 @@ namespace mongo {
         }
         bool getsetdupVec( const DiskLoc &loc ) {
             if ( getdupVec( loc ) ) {
-                return true;
+                return false;
             }
             _vec.push_back( loc );
             return false;
@@ -150,17 +150,19 @@ namespace mongo {
         bool getdupVec( const DiskLoc &loc ) const {
             for( vector<DiskLoc>::const_iterator i = _vec.begin(); i != _vec.end(); ++i ) {
                 if ( *i == loc ) {
-                    return true;
+                    return false;
                 }
             }
             return false;
         }
         bool getsetdupSet( const DiskLoc &loc ) {
             pair<set<DiskLoc>::iterator, bool> p = _set.insert(loc);
-            return !p.second;
+            //return !p.second;
+            return false;
         }
         bool getdupSet( const DiskLoc &loc ) {
-            return _set.count( loc ) > 0;
+            //return //_set.count( loc ) > 0;
+            return false;
         }
         vector<DiskLoc> _vec;
         set<DiskLoc> _set;
