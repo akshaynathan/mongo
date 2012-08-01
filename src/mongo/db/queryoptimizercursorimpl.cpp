@@ -185,6 +185,8 @@ namespace mongo {
         virtual QueryOp *createChild() const {
             return new QueryOptimizerCursorOp( _matchCounter.aggregateNscanned(), _selectionPolicy, _requireOrder, _alwaysCountMatches, _matchCounter.cumulativeCount() );
         }
+        bool ok() const { return _c->ok(); }
+        BSONObj current() const { return _c ? _c->current() : BSONObj(); }
         DiskLoc currLoc() const { return _c ? _c->currLoc() : DiskLoc(); }
         BSONObj currKey() const { return _c ? _c->currKey() : BSONObj(); }
         bool currentMatches( MatchDetails *details ) {
@@ -338,7 +340,7 @@ namespace mongo {
             return ret.release();
         }
         
-        virtual bool ok() { return _takeover ? _takeover->ok() : !currLoc().isNull(); }
+        virtual bool ok() { return _takeover ? _takeover->ok() : _currOp->ok(); }
         
         virtual Record* _current() {
             if ( _takeover ) {
@@ -353,7 +355,8 @@ namespace mongo {
                 return _takeover->current();
             }
             assertOk();
-            return currLoc().obj();
+            //return currLoc().obj();
+            return  _currOp->current();
         }
         
         virtual DiskLoc currLoc() { return _takeover ? _takeover->currLoc() : _currLoc(); }
@@ -663,7 +666,7 @@ namespace mongo {
         }
         
         void assertOk() const {
-            massert( 14809, "Invalid access for cursor that is not ok()", !_currLoc().isNull() );
+            massert( 14809, "Invalid access for cursor that is not ok()", _currOp->ok() );
         }
 
         /** Insert and check for dups before takeover occurs */

@@ -83,8 +83,9 @@ namespace mongo {
 
         if ( details )
             details->setLoadedRecord( true );
+        
+        BSONObj obj = recLoc.isNull() ? key.getObjectField("__doc__") : recLoc.obj();
 
-        BSONObj obj = recLoc.obj();
         bool res =
             _docMatcher->matches( obj, details ) &&
             !isOrClauseDup( obj );

@@ -1055,10 +1055,11 @@ namespace mongo {
          * @return false if the loc has not been seen
          */
         virtual bool getsetdup(DiskLoc loc) {
-            if( _multikey ) {
+            /* if( _multikey ) {
                 pair<set<DiskLoc>::iterator, bool> p = _dups.insert(loc);
                 return !p.second;
             }
+            */
             return false;
         }
 
