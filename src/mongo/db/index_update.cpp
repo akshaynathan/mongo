@@ -110,14 +110,10 @@ namespace mongo {
         DiskLoc finalLoc = recordLoc;
 
         if( clustered && obj.objsize() < 512 ) {
-            k = *keys.begin();
-            BSONObjBuilder b;
-            b.appendElements( obj );
-            b.append( StringData("__from_btree__") , true );
             
             BSONObjBuilder m;
-            m.appendElements( k );
-            m.append( StringData("__doc__") , b.obj() );
+            m.appendElements( *keys.begin() );
+            m.append( StringData("__doc__") , obj );
             
             k = m.obj();
             finalLoc = DiskLoc();
